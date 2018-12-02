@@ -4,7 +4,7 @@ export default class DraggableCameraControl {
   camera: Phaser.Cameras.Scene2D.Camera;
   input: Phaser.Input.InputPlugin;
 
-  dragging: boolean = false;
+  public dragging: boolean = false;
   downX: number;
   downY: number;
   initialScrollX: number;

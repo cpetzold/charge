@@ -7,6 +7,7 @@ import DraggableCameraControl from "./DraggableCameraControl";
 export default class GameScene extends Phaser.Scene {
   map: Phaser.Tilemaps.Tilemap;
   tileOutline: Phaser.GameObjects.Graphics;
+  cameraControl: DraggableCameraControl;
 
   constructor() {
     super({
@@ -20,17 +21,25 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     this.map = this.make.tilemap({
-      key: "map",
       tileWidth: 64,
       tileHeight: 64,
-      width: 1000,
+      width: 100,
       height: 100
     });
 
     const tileset = this.map.addTilesetImage("tiles");
     this.map.createBlankDynamicLayer("tiles", tileset);
 
-    console.log(this.map.width);
+    const tileData = JSON.parse(localStorage.getItem("map"));
+    tileData &&
+      tileData.forEach((row, y) =>
+        row.forEach((tileIndex, x) => this.map.putTileAt(tileIndex, x, y))
+      );
+
+    setInterval(() => {
+      const map = this.map.layer.data.map(row => row.map(tile => tile.index));
+      localStorage.setItem("map", JSON.stringify(map));
+    }, 1000);
 
     const grid = this.add.grid(
       this.map.widthInPixels / 2,
@@ -54,7 +63,7 @@ export default class GameScene extends Phaser.Scene {
     );
     this.cameras.main.scrollY = Infinity;
 
-    new DraggableCameraControl({
+    this.cameraControl = new DraggableCameraControl({
       camera: this.cameras.main,
       input: this.input
     });
@@ -81,8 +90,8 @@ export default class GameScene extends Phaser.Scene {
     this.tileOutline.x = x;
     this.tileOutline.y = y;
 
-    if (this.input.mousePointer.isDown) {
-      this.map.putTileAt(0, overTilePos.x, overTilePos.y);
+    if (this.input.mousePointer.isDown && !this.cameraControl.dragging) {
+      this.map.putTileAt(1, overTilePos.x, overTilePos.y);
     }
   }
 }
