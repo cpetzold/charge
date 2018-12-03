@@ -9,7 +9,8 @@
     "dev": "npm run webpack-dev-server",
     "start": "npm run dev",
     "build:dev": "npm run webpack -- --env.mode development",
-    "build:prod": "npm run webpack -- --env.mode production"
+    "build:prod": "npm run webpack -- --env.mode production",
+    "now-build": "npm run build:prod"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.118",
