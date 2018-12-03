@@ -45,8 +45,9 @@ export default class DraggableCameraControl {
     }
   };
 
-  onMouseWheel = ({ deltaX, deltaY }: MouseWheelEvent) => {
-    this.camera.scrollX += deltaX;
-    this.camera.scrollY += deltaY;
+  onMouseWheel = (e: MouseWheelEvent) => {
+    e.preventDefault();
+    this.camera.scrollX += e.deltaX;
+    this.camera.scrollY += e.deltaY;
   };
 }
