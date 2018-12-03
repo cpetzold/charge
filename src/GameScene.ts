@@ -2,6 +2,7 @@ import _ from "lodash";
 import Phaser from "phaser";
 
 import tiles from "../resources/tiles.png";
+import tilesExtruded from "../resources/tiles.extruded.png";
 import DraggableCameraControl from "./DraggableCameraControl";
 
 export default class GameScene extends Phaser.Scene {
@@ -17,6 +18,7 @@ export default class GameScene extends Phaser.Scene {
 
   preload() {
     this.load.image("tiles", tiles);
+    this.load.image("tiles.extruded", tilesExtruded);
   }
 
   create() {
@@ -27,7 +29,14 @@ export default class GameScene extends Phaser.Scene {
       height: 100
     });
 
-    const tileset = this.map.addTilesetImage("tiles");
+    const tileset = this.map.addTilesetImage(
+      "tiles",
+      "tiles.extruded",
+      64,
+      64,
+      1,
+      2
+    );
     this.map.createBlankDynamicLayer("tiles", tileset);
 
     const tileData = JSON.parse(localStorage.getItem("map"));
@@ -79,12 +88,26 @@ export default class GameScene extends Phaser.Scene {
       this.map.tileHeight
     );
     this.tileOutline.strokeRectShape(rect);
+
+    this.events.on("resize", this.onResize);
+    this.onResize(this.game.canvas.width, this.game.canvas.height);
   }
 
+  onResize = (width, height) => {
+    const desiredWidth = this.map.tileWidth * 30;
+    const desiredHeight = this.map.tileHeight * 16;
+    const cameraHeight = Math.floor(width / (desiredWidth / desiredHeight));
+    this.cameras.resize(width, cameraHeight);
+    console.log({ desiredWidth, desiredHeight, width, height, cameraHeight });
+    this.cameras.main.zoom = width / desiredWidth;
+  };
+
   update() {
-    const pointerWorldX = this.input.mousePointer.x + this.cameras.main.scrollX;
-    const pointerWorldY = this.input.mousePointer.y + this.cameras.main.scrollY;
-    const overTilePos = this.map.worldToTileXY(pointerWorldX, pointerWorldY);
+    const pointerWorld = this.cameras.main.getWorldPoint(
+      this.input.mousePointer.x,
+      this.input.mousePointer.y
+    );
+    const overTilePos = this.map.worldToTileXY(pointerWorld.x, pointerWorld.y);
     const { x, y } = this.map.tileToWorldXY(overTilePos.x, overTilePos.y);
 
     this.tileOutline.x = x;

@@ -6,14 +6,20 @@ import GameScene from "./GameScene";
 export class Game extends Phaser.Game {
   constructor(config: GameConfig) {
     super(config);
+
+    window.addEventListener("resize", _.debounce(this.onWindowResize, 250));
   }
+
+  onWindowResize = () => {
+    this.resize(window.innerWidth, window.innerHeight);
+  };
 }
 
-const game = new Game({
+new Game({
   width: window.innerWidth,
   height: window.innerHeight,
   canvasStyle: "position: fixed; top: 0; left: 0;",
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   physics: {
     default: "arcade",
     arcade: {
@@ -22,8 +28,3 @@ const game = new Game({
   },
   scene: GameScene
 });
-
-window.addEventListener(
-  "resize",
-  _.debounce(() => game.resize(window.innerWidth, window.innerHeight), 250)
-);
