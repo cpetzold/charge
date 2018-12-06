@@ -23,8 +23,12 @@ new Game({
   physics: {
     default: "arcade",
     arcade: {
-      gravity: { y: 200 }
+      timeScale: 0.5,
+      gravity: { y: 500 },
+
+      debug: true
     }
   },
-  scene: GameScene
+  scene: GameScene,
+  disableContextMenu: true
 });

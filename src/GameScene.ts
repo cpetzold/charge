@@ -1,19 +1,76 @@
 import _ from "lodash";
 import Phaser from "phaser";
+import * as dat from "dat.gui";
 
 import tiles from "../resources/tiles.png";
 import tilesExtruded from "../resources/tiles.extruded.png";
 import DraggableCameraControl from "./DraggableCameraControl";
+import ResizableTilemap from "./ResizableTilemap";
+import Player from "./Player";
+
+const MIN_MAP_WIDTH = 30;
+const MAX_MAP_WIDTH = 100;
+const MIN_MAP_HEIGHT = 16;
+const MAX_MAP_HEIGHT = 100;
 
 export default class GameScene extends Phaser.Scene {
-  map: Phaser.Tilemaps.Tilemap;
+  map: ResizableTilemap;
+  grid: Phaser.GameObjects.Grid;
   tileOutline: Phaser.GameObjects.Graphics;
   cameraControl: DraggableCameraControl;
+  gui: dat.GUI;
+
+  debug: boolean = true;
+  mapDebugGraphics: Phaser.GameObjects.Graphics;
+
+  mapWidth: number = MIN_MAP_WIDTH;
+  mapHeight: number = MIN_MAP_HEIGHT;
+
+  player: Player;
+
+  shift: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super({
       key: "GameScene"
     });
+
+    this.gui = new dat.GUI();
+    this.gui.add(this, "debug", true);
+    this.gui
+      .add(this, "mapWidth", MIN_MAP_WIDTH, MAX_MAP_WIDTH, 1)
+      .onChange(this.onMapWidthChange);
+    this.gui
+      .add(this, "mapHeight", MIN_MAP_HEIGHT, MAX_MAP_HEIGHT, 1)
+      .onChange(this.onMapHeightChange);
+  }
+
+  onMapWidthChange = width => {
+    this.map.setWidth(width);
+    this.updateSizes();
+  };
+
+  onMapHeightChange = height => {
+    const originalScrollY = this.cameras.main.scrollY;
+    const diff = height * this.map.tileHeight - this.map.heightInPixels;
+    this.map.setHeight(height);
+    this.updateSizes();
+    if (diff > 0) {
+      this.cameras.main.scrollY += diff;
+    } else {
+      this.cameras.main.scrollY = originalScrollY;
+    }
+  };
+
+  updateSizes() {
+    this.grid.width = this.map.widthInPixels;
+    this.grid.height = this.map.heightInPixels;
+    this.cameras.main.setBounds(
+      0,
+      0,
+      this.map.widthInPixels,
+      this.map.heightInPixels
+    );
   }
 
   preload() {
@@ -22,12 +79,18 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.map = this.make.tilemap({
-      tileWidth: 64,
-      tileHeight: 64,
-      width: 100,
-      height: 100
-    });
+    this.player = new Player(this, 100, 100);
+    this.children.add(this.player);
+
+    this.map = new ResizableTilemap(
+      this,
+      new Phaser.Tilemaps.MapData({
+        tileWidth: 64,
+        tileHeight: 64,
+        width: this.mapWidth,
+        height: this.mapHeight
+      })
+    );
 
     const tileset = this.map.addTilesetImage(
       "tiles",
@@ -38,6 +101,11 @@ export default class GameScene extends Phaser.Scene {
       2
     );
     this.map.createBlankDynamicLayer("tiles", tileset);
+    this.map.putTilesAt(_.times(10, () => 1), 0, this.map.height - 1);
+
+    this.map.setCollision(1, true);
+
+    this.mapDebugGraphics = this.add.graphics();
 
     const tileData = JSON.parse(localStorage.getItem("map"));
     tileData &&
@@ -50,7 +118,7 @@ export default class GameScene extends Phaser.Scene {
       localStorage.setItem("map", JSON.stringify(map));
     }, 1000);
 
-    const grid = this.add.grid(
+    this.grid = this.add.grid(
       this.map.widthInPixels / 2,
       this.map.heightInPixels / 2,
       this.map.widthInPixels,
@@ -59,10 +127,11 @@ export default class GameScene extends Phaser.Scene {
       this.map.tileHeight,
       null,
       null,
-      0x111111
+      0x000000,
+      0.2
     );
 
-    grid.depth = -10;
+    this.grid.depth = -10;
 
     this.cameras.main.setBounds(
       0,
@@ -71,6 +140,7 @@ export default class GameScene extends Phaser.Scene {
       this.map.heightInPixels
     );
     this.cameras.main.scrollY = Infinity;
+    this.cameras.main.setBackgroundColor(0xb8d0f7);
 
     this.cameraControl = new DraggableCameraControl({
       camera: this.cameras.main,
@@ -78,7 +148,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.tileOutline = this.add.graphics({
-      lineStyle: { width: 1, color: 0xffffff }
+      lineStyle: { width: 1, color: 0x000000 }
     });
 
     const rect = new Phaser.Geom.Rectangle(
@@ -91,6 +161,10 @@ export default class GameScene extends Phaser.Scene {
 
     this.events.on("resize", this.onResize);
     this.onResize(this.game.canvas.width, this.game.canvas.height);
+
+    this.physics.add.collider(this.player, this.map.layer.tilemapLayer);
+
+    this.shift = this.input.keyboard.addKey("SHIFT");
   }
 
   onResize = (width, height) => {
@@ -98,11 +172,12 @@ export default class GameScene extends Phaser.Scene {
     const desiredHeight = this.map.tileHeight * 16;
     const cameraHeight = Math.floor(width / (desiredWidth / desiredHeight));
     this.cameras.resize(width, cameraHeight);
-    console.log({ desiredWidth, desiredHeight, width, height, cameraHeight });
     this.cameras.main.zoom = width / desiredWidth;
   };
 
   update() {
+    this.player.update();
+
     const pointerWorld = this.cameras.main.getWorldPoint(
       this.input.mousePointer.x,
       this.input.mousePointer.y
@@ -114,7 +189,16 @@ export default class GameScene extends Phaser.Scene {
     this.tileOutline.y = y;
 
     if (this.input.mousePointer.isDown && !this.cameraControl.dragging) {
-      this.map.putTileAt(1, overTilePos.x, overTilePos.y);
+      if (this.shift.isDown) {
+        this.map.removeTileAt(overTilePos.x, overTilePos.y);
+      } else {
+        this.map.putTileAt(1, overTilePos.x, overTilePos.y);
+      }
+    }
+
+    this.mapDebugGraphics.clear();
+    if (this.debug) {
+      this.map.renderDebug(this.mapDebugGraphics, { faceColor: null });
     }
   }
 }

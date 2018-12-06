@@ -14,7 +14,6 @@ export default class DraggableCameraControl {
     this.camera = camera;
     this.input = input;
 
-    this.input.mouse.disableContextMenu();
     this.input.on("pointerdown", this.onPointerDown);
     this.input.on("pointerup", this.onPointerUp);
     this.input.on("pointermove", this.onPointerMove);
@@ -40,14 +39,20 @@ export default class DraggableCameraControl {
 
   onPointerMove = (pointer: Phaser.Input.Pointer) => {
     if (this.dragging) {
-      this.camera.scrollX = this.initialScrollX + (this.downX - pointer.x);
-      this.camera.scrollY = this.initialScrollY + (this.downY - pointer.y);
+      this.camera.scrollX = this.camera.clampX(
+        this.initialScrollX + (this.downX - pointer.x)
+      );
+      this.camera.scrollY = this.camera.clampY(
+        this.initialScrollY + (this.downY - pointer.y)
+      );
     }
   };
 
   onMouseWheel = (e: MouseWheelEvent) => {
     e.preventDefault();
-    this.camera.scrollX += e.deltaX;
-    this.camera.scrollY += e.deltaY;
+    this.camera.setScroll(
+      this.camera.clampX(this.camera.scrollX + e.deltaX),
+      this.camera.clampY(this.camera.scrollY + e.deltaY)
+    );
   };
 }
