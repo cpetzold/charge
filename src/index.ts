@@ -1,34 +1,34 @@
+import dat from "dat.gui";
+import { Color, Engine, Loader } from "excalibur";
 import _ from "lodash";
-import Phaser from "phaser";
 
-import GameScene from "./GameScene";
+import MapMaker from "./MapMaker";
 
-export class Game extends Phaser.Game {
-  constructor(config: GameConfig) {
-    super(config);
+class Game extends Engine {
+  loader: Loader;
+  dui: dat.GUI;
 
-    window.addEventListener("resize", _.debounce(this.onWindowResize, 250));
+  constructor() {
+    super({
+      suppressPlayButton: true
+    });
+
+    this.loader = new Loader();
+    this.dui = new dat.GUI();
+    this.dui.add(this, "isDebug");
   }
 
-  onWindowResize = () => {
-    this.resize(window.innerWidth, window.innerHeight);
-  };
+  public start() {
+    window.addEventListener("contextmenu", e => e.preventDefault());
+
+    this.add("mapMaker", new MapMaker(this.dui, this.loader));
+    this.goToScene("mapMaker");
+
+    this.isDebug = false;
+
+    return super.start(this.loader);
+  }
 }
 
-new Game({
-  width: window.innerWidth,
-  height: window.innerHeight,
-  canvasStyle: "position: fixed; top: 0; left: 0;",
-  type: Phaser.WEBGL,
-  physics: {
-    default: "arcade",
-    arcade: {
-      timeScale: 0.5,
-      gravity: { y: 500 },
-
-      debug: true
-    }
-  },
-  scene: GameScene,
-  disableContextMenu: true
-});
+const game = new Game();
+game.start();
