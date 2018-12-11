@@ -1,5 +1,5 @@
 import dat from "dat.gui";
-import { Color, Engine, Loader } from "excalibur";
+import { Color, Engine, Loader, DisplayMode } from "excalibur";
 import _ from "lodash";
 
 import MapMaker from "./MapMaker";
@@ -10,7 +10,8 @@ class Game extends Engine {
 
   constructor() {
     super({
-      suppressPlayButton: true
+      suppressPlayButton: true,
+      displayMode: DisplayMode.Fixed
     });
 
     this.loader = new Loader();
@@ -29,6 +30,10 @@ class Game extends Engine {
     return super.start(this.loader);
   }
 }
+
+document.body.style.margin = "0px";
+document.body.style.backgroundColor = "black";
+document.body.style.overflow = "hidden";
 
 const game = new Game();
 game.start();

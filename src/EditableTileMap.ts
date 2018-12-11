@@ -58,7 +58,7 @@ export default class EditableTileMap extends TileMap {
     const width = this.cols * this.cellWidth;
     const height = this.rows * this.cellHeight;
     ctx.save();
-    ctx.strokeStyle = new Color(255, 255, 255).toString();
+    ctx.strokeStyle = new Color(255, 255, 255, 0.1).toString();
     for (let x = 0; x < this.cols + 1; x++) {
       ctx.beginPath();
       ctx.moveTo(this.x + x * this.cellWidth, this.y);
