@@ -1,17 +1,16 @@
 import * as dat from "dat.gui";
 import {
+  BoundingBox,
   Engine,
-  Loader,
   Scene,
   SpriteSheet,
-  Texture,
   TileSprite,
-  Vector,
-  BoundingBox
+  Vector
 } from "excalibur";
-import tilesPNG from "../resources/tiles.png";
-import EditableTileMap from "./EditableTileMap";
 import Camera from "./Camera";
+import EditableTileMap from "./EditableTileMap";
+import { tilesTexture } from "./resources";
+import Player from "./Player";
 
 const TILE_SIZE = 64;
 const MIN_COLS = 30;
@@ -20,17 +19,16 @@ const MIN_ROWS = 16;
 const MAX_ROWS = 100;
 
 export default class MapMaker extends Scene {
-  loader: Loader;
   tilemap: EditableTileMap;
   dui: dat.GUI;
 
   cols: number = MIN_COLS;
   rows: number = MIN_ROWS;
 
-  constructor(dui: dat.GUI, loader: Loader) {
-    super();
+  player: Player;
 
-    this.loader = loader;
+  constructor(dui: dat.GUI) {
+    super();
 
     this.tilemap = new EditableTileMap({
       x: 0,
@@ -55,11 +53,8 @@ export default class MapMaker extends Scene {
     this.camera.pos = this.cameraSize.scale(0.5);
     this.updateCameraBounds();
 
-    const tileTexture = new Texture(tilesPNG);
-    this.loader.addResource(tileTexture);
-
     const tileSpriteSheet = new SpriteSheet({
-      image: tileTexture,
+      image: tilesTexture,
       spWidth: TILE_SIZE,
       spHeight: TILE_SIZE,
       rows: 1,
@@ -75,6 +70,9 @@ export default class MapMaker extends Scene {
       this.updateCanvasSize(engine);
       this.updateCameraZoom(engine);
     });
+
+    this.player = new Player({ x: 100, y: 100 });
+    this.add(this.player);
   }
 
   onColsChange = newCols => {
@@ -100,7 +98,7 @@ export default class MapMaker extends Scene {
     );
   }
 
-  updateCanvasSize(engine) {
+  updateCanvasSize(engine: Engine) {
     const desiredAspectRatio = this.cameraSize.x / this.cameraSize.y;
     const windowAspectRatio = window.innerWidth / window.innerHeight;
 
@@ -135,6 +133,7 @@ export default class MapMaker extends Scene {
       const cell = this.tilemap.getCellByPoint(x, y);
       if (cell) {
         cell.pushSprite(new TileSprite("tiles", 1));
+        cell.solid = true;
       }
     }
   }

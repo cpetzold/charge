@@ -1,8 +1,9 @@
 import dat from "dat.gui";
-import { Color, Engine, Loader, DisplayMode } from "excalibur";
+import { DisplayMode, Engine, Loader, Physics } from "excalibur";
 import _ from "lodash";
 
 import MapMaker from "./MapMaker";
+import * as resources from "./resources";
 
 class Game extends Engine {
   loader: Loader;
@@ -16,16 +17,18 @@ class Game extends Engine {
 
     this.loader = new Loader();
     this.dui = new dat.GUI();
+
+    this.isDebug = true;
     this.dui.add(this, "isDebug");
   }
 
   public start() {
     window.addEventListener("contextmenu", e => e.preventDefault());
 
-    this.add("mapMaker", new MapMaker(this.dui, this.loader));
-    this.goToScene("mapMaker");
+    _.each(resources, resource => this.loader.addResource(resource));
 
-    this.isDebug = false;
+    this.add("mapMaker", new MapMaker(this.dui));
+    this.goToScene("mapMaker");
 
     return super.start(this.loader);
   }
@@ -34,6 +37,8 @@ class Game extends Engine {
 document.body.style.margin = "0px";
 document.body.style.backgroundColor = "black";
 document.body.style.overflow = "hidden";
+
+Physics.acc.setTo(0, 700);
 
 const game = new Game();
 game.start();
