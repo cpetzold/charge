@@ -5,7 +5,7 @@ import {
   Input,
   Util,
   BoundingBox
-} from "excalibur";
+} from "cpetzold-excalibur";
 
 function isDragButton(button: Input.PointerButton): boolean {
   return (

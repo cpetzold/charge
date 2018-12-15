@@ -6,7 +6,7 @@ import {
   SpriteSheet,
   TileSprite,
   Vector
-} from "excalibur";
+} from "cpetzold-excalibur";
 import Camera from "./Camera";
 import EditableTileMap from "./EditableTileMap";
 import { tilesTexture } from "./resources";

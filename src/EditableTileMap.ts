@@ -1,4 +1,4 @@
-import { Cell, TileMap, Color } from "excalibur";
+import { Cell, TileMap, Color } from "cpetzold-excalibur";
 import _ from "lodash";
 
 export default class EditableTileMap extends TileMap {

@@ -7,7 +7,7 @@ import {
   Side,
   Input,
   Vector
-} from "excalibur";
+} from "cpetzold-excalibur";
 
 import { playerTexture } from "./resources";
 

@@ -1,4 +1,4 @@
-import { Texture } from "excalibur";
+import { Texture } from "cpetzold-excalibur";
 
 import tiles from "../resources/tiles.png";
 import player from "../resources/player.png";

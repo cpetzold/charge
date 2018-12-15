@@ -1,5 +1,5 @@
 import dat from "dat.gui";
-import { DisplayMode, Engine, Loader, Physics } from "excalibur";
+import { DisplayMode, Engine, Loader, Physics } from "cpetzold-excalibur";
 import _ from "lodash";
 
 import MapMaker from "./MapMaker";
